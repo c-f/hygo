@@ -1,0 +1,54 @@
+version: '3'
+services:
+
+# --[postgres]--
+ postgres-latest:
+  image: postgres:latest
+  environment:
+    POSTGRES_PASSWORD: "postgres-latest"
+  ports:
+    - 127.0.0.1:15001:5432
+
+ postgres-13-alpine:
+  image: postgres:13-alpine
+  environment:
+    POSTGRES_PASSWORD: "postgres-13-alpine"
+  ports:
+    - 127.0.0.1:15002:5432
+
+ postgres-12-alpine:
+  image: postgres:12-alpine
+  environment:
+    POSTGRES_PASSWORD: "postgres-12-alpine"
+  ports:
+    - 127.0.0.1:15003:5432
+
+ postgres-11-alpine:
+  image: postgres:11-alpine
+  environment:
+    POSTGRES_PASSWORD: "postgres-11-alpine"
+  ports:
+    - 127.0.0.1:15004:5432
+
+ postgres-10-alpine:
+  image: postgres:10-alpine
+  environment:
+    POSTGRES_PASSWORD: "postgres-10-alpine"
+  ports:
+    - 127.0.0.1:15005:5432
+
+ postgres-9-6-alpine:
+  image: postgres:9.6-alpine
+  environment:
+    POSTGRES_PASSWORD: "postgres-9.6-alpine"
+  ports:
+    - 127.0.0.1:15006:5432
+
+ postgres-9-5-alpine:
+  image: postgres:9.5-alpine
+  environment:
+    POSTGRES_PASSWORD: "postgres-9.5-alpine"
+    POSTGRES_USER: "posty"
+  ports:
+    - 127.0.0.1:15007:5432
+

@@ -1,0 +1,44 @@
+version: '3'
+services:
+ # --[ mongodb ]--
+  mongo-3-6:
+    image: mongo:3.6-xenial
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo-3.6-xenial
+      MONGO_INITDB_ROOT_PASSWORD: mongo-3.6-xenial
+    ports:
+      - 127.0.0.1:17001:27017
+
+  mongo-4-0:
+    image: mongo:4.0-xenial
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo-4.0-xenial
+      MONGO_INITDB_ROOT_PASSWORD: mongo-4.0-xenial
+    ports:
+      - 127.0.0.1:17002:27017
+
+  mongo-4-2:
+    image: mongo:4.2-bionic
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo-4.2-bionic
+      MONGO_INITDB_ROOT_PASSWORD: mongo-4.2-bionic
+    ports:
+      - 127.0.0.1:17003:27017
+
+  mongo-4-4:
+    image: mongo:4.4-bionic
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo-4.4-bionic
+      MONGO_INITDB_ROOT_PASSWORD: mongo-4.4-bionic
+    ports:
+      - 127.0.0.1:17004:27017
+
+
+# 3.6-windowsservercore-1809
+# 3.6-windowsservercore-ltsc2016
+# 4.0-windowsservercore-1809
+# 4.0-windowsservercore-ltsc2016
+# 4.2-windowsservercore-1809
+# 4.2-windowsservercore-ltsc2016
+# 4.4-windowsservercore-1809
+# 4.4-windowsservercore-ltsc2016

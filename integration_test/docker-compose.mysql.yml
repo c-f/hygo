@@ -1,0 +1,90 @@
+version: '3'
+services:
+# --[mysql services]--
+ mysql-latest:
+  image: mysql
+  environment: 
+   MYSQL_ROOT_PASSWORD: mysql-root-latest
+  ports:
+   - 127.0.0.1:14101:3306
+
+ mysql-5-6:
+  image: mysql:5.6
+  environment:
+    MYSQL_USER: mysql-5-6
+    MYSQL_PASSWORD: mysql-5-6
+    MYSQL_DATABASE: mysql-5-6
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+    - 127.0.0.1:14102:3306
+
+ mysql-5-7:
+  image: mysql:5.7
+  environment:
+    MYSQL_USER: mysql-5-7
+    MYSQL_PASSWORD: mysql-5-7
+    MYSQL_DATABASE: mysql-5-7
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+    - 127.0.0.1:14103:3306
+
+ mysql-8-0:
+  image: mysql:8.0
+  environment:
+    MYSQL_USER: mysql-8-0
+    MYSQL_PASSWORD: mysql-8-0
+    MYSQL_DATABASE: mysql-8-0
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+    - 127.0.0.1:14104:3306
+
+# --[maria db services]--
+ mariadb-10-1:
+  image: mariadb:10.1
+  environment:
+    MYSQL_USER: mariadb-10-1
+    MYSQL_DATABASE: mariadb-10-1
+    MYSQL_PASSWORD: mariadb-10-1
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+   - 127.0.0.1:14105:3306
+
+ mariadb-10-2:
+  image: mariadb:10.2
+  environment:
+    MYSQL_USER: mariadb-10-2
+    MYSQL_DATABASE: mariadb-10-2
+    MYSQL_PASSWORD: mariadb-10-2
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+   - 127.0.0.1:14106:3306
+
+ mariadb-10-3:
+  image: mariadb:10.3
+  environment:
+    MYSQL_USER: mariadb-10-3
+    MYSQL_DATABASE: mariadb-10-3
+    MYSQL_PASSWORD: mariadb-10-3
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+   - 127.0.0.1:14107:3306
+
+ mariadb-10-4:
+  image: mariadb:10.4
+  environment:
+    MYSQL_USER: mariadb-10-4
+    MYSQL_DATABASE: mariadb-10-4
+    MYSQL_PASSWORD: mariadb-10-4
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+   - 127.0.0.1:14108:3306
+
+ mariadb-10-5:
+  image: mariadb:10.5
+  environment:
+    MYSQL_USER: mariadb-10-5
+    MYSQL_DATABASE: mariadb-10-5
+    MYSQL_PASSWORD: mariadb-10-5
+    MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  ports:
+   - 127.0.0.1:14109:3306

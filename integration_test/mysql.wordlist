@@ -1,0 +1,9 @@
+{"user":"root","password":"mysql-root-latest"}
+{"user":"mysql-5-6","password":"mysql-5-6"}
+{"user":"mysql-5-7","password":"mysql-5-7"}
+{"user":"mysql-8-0","password":"mysql-8-0"}
+{"user":"mariadb-10-1","password":"mariadb-10-1"}
+{"user":"mariadb-10-2","password":"mariadb-10-2"}
+{"user":"mariadb-10-3","password":"mariadb-10-3"}
+{"user":"mariadb-10-4","password":"mariadb-10-4"}
+{"user":"mariadb-10-5","password":"mariadb-10-5"}

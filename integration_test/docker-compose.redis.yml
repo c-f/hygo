@@ -1,0 +1,27 @@
+version: '3'
+services:
+  # --[redis]--
+  redis-latest:
+    image: redis:latest
+    # no password lul
+    ports:
+      - 127.0.0.1:18001:6379
+
+  redis-6-2-alpine:
+    image: redis:6.2-alpine
+    command: redis-server --requirepass redis-6-2-alpine
+    ports:
+      - 127.0.0.1:18002:6379
+
+  redis-6-0-alpine:
+    image: redis:6.0-alpine
+    command: redis-server --requirepass redis-6-0-alpine
+    ports:
+      - 127.0.0.1:18003:6379
+
+  redis-5-0-alpine:
+    image: redis:5.0.11-alpine
+    command: redis-server --requirepass redis-5-0-alpine
+    ports:
+      - 127.0.0.1:18004:6379
+

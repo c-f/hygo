@@ -1,0 +1,4 @@
+{"user":"mongo-3.6-xenial","password":"mongo-3.6-xenial"}
+{"user":"mongo-4.0-xenial","password":"mongo-4.0-xenial"}
+{"user":"mongo-4.2-bionic","password":"mongo-4.2-bionic"}
+{"user":"mongo-4.4-bionic","password":"mongo-4.4-bionic"}

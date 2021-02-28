@@ -1,0 +1,7 @@
+{"user":"postgres","password":"postgres-latest"}
+{"user":"postgres","password":"postgres-13-alpine"}
+{"user":"postgres","password":"postgres-12-alpine"}
+{"user":"postgres","password":"postgres-11-alpine"}
+{"user":"postgres","password":"postgres-10-alpine"}
+{"user":"postgres","password":"postgres-9.6-alpine"}
+{"user":"postgres","password":"postgres-9.5-alpine"}

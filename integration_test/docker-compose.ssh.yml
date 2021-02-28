@@ -1,0 +1,64 @@
+version: '3'
+services:
+ # --[SSH related services]--
+ ssh-openssh:
+    image: linuxserver/openssh-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - SUDO_ACCESS=false 
+      - DOCKER_MODS=linuxserver/mods:openssh-server-ssh-tunnel
+      - PASSWORD_ACCESS=true #optional
+      - USER_PASSWORD=openssh #optional
+      #- PUBLIC_KEY=yourpublickey #optional
+      - USER_NAME=openssh #optional
+    ports: 
+      - 127.0.0.1:14001:2222
+ ssh-dropbear:
+    image: sjourdan/alpine-sshd
+    environment: 
+      - USER=dropbear 
+      - PASSWORD=dropbear
+    ports: 
+      - 127.0.0.1:14002:22
+
+ ssh-openssh-key-rsa:
+    image: linuxserver/openssh-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - SUDO_ACCESS=false 
+      - DOCKER_MODS=linuxserver/mods:openssh-server-ssh-tunnel
+      - "PUBLIC_KEY=ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDB4hQfO8K776m2DSMz7yg8xsbkyfSqHVqQGJrngjDDxBaxiUEqDzIkcSiKf+0OJdtmRE8gSXFJSHHE0syzEEsyT5swhEs/HdKB2rAjiFHTMRBIfAaivd3nMsy1myVj3GwxvV5UBGfl7fmqw2HsYrNi/vAXZl2RXUpB/CDRLuXcxxYVbZyEHSISjHZK4stxpCJTbhmddPpehMVaijsftSKkVis3u2lOMRyofAOkvIwta4ELQ1MQpnWq891uuoIVcBP4IuvxtRbKLKtLiqfrE6V5CIMH70J7JfTCovluDwfU10hsTFsrUIWp7shJ7wmpBo9k7yh2O0f/S/XARUjdQr2/3iHqv8N0Jos9jmTlUxlwD7VV5S7fQKQ0uPR3IzsqtBpUFopFLzRSrvi12lwXzMgAOtxBtGtsjMGH3cw14ZDrWfF5OgQ8fyoQRyXi6+D+kndYnbVQuBjOsehPYnEDeXJXnszYhTnwtFSQ3DIrIK8JzKr6QqXY+Y/m+d28RNpSr5tVJMUc//NKMy0IF34JpcA5CqPAQFRHkupV5b5GFEb53uDsMknXpG7AFVz3OZWnWmUwCej3nL02lecKMqsxRb/5uSzoVbBFtlxyJ1jehTVpIeUBE6uIJ3tIapRtWyp9QoQ0vaZp1wVH7ceJqcmjodm6R9/cbE9bWAnJeIOaCsrYIQ=="
+      - USER_NAME=keyuser #optional
+    ports:
+     - 127.0.0.1:14003:2222
+
+ ssh-openssh-key-edpw:
+    image: linuxserver/openssh-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - SUDO_ACCESS=false 
+      - "PUBLIC_KEY=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMAXvOeZwEaclEZp6bxCVaYFHupCJ/jAcR8RUrfn1DJS"
+      - USER_NAME=keyuserpw #optional
+    ports:
+     - 127.0.0.1:14004:2222
+
+ ssh-ubuntu:
+  image: rastasheep/ubuntu-sshd:14.04
+  ports:
+    - 127.0.0.1:14005:22
+
+ panubo:
+  image: docker.io/panubo/sshd:1.3.0 
+  environment:
+    - SSH_ENABLE_PASSWORD_AUTH=true
+    - SSH_USERS=user1:1000:1000
+  volumes:
+    - ./luls.sh:/etc/entrypoint.d/luls.sh
+  ports:
+    - 127.0.0.1:14006:22

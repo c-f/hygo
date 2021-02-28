@@ -1,0 +1,19 @@
+version: '3'
+services:
+  # --[testing mssql]--
+  mssql-2017:
+   image: mcr.microsoft.com/mssql/server:2017-latest
+   environment:
+    ACCEPT_EULA: "Y"
+    SA_PASSWORD: "yourStrong(!)Password"
+   ports:
+    - 127.0.0.1:16001:1433
+
+  mssql-2019:
+   image: mcr.microsoft.com/mssql/server:2017-CU22-ubuntu-16.04
+   environment:
+    ACCEPT_EULA: "Y"
+    SA_PASSWORD: "yourluuuulllsStrong(!)Password"
+   ports:
+    - 127.0.0.1:16002:1433
+
