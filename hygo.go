@@ -13,7 +13,9 @@ func GetBruter(service string, conf *Config, target string, port string) Bruter 
 	switch service {
 	/* --[SSH]-- */
 	case ssh.Name:
-		return ssh.New(target, GetPortOrDefault(port, 22), conf.Sleep, conf.Timeout)
+		module := ssh.New(target, GetPortOrDefault(port, 22), conf.Sleep, conf.Timeout, conf.LogFailedAttempts)
+		module.StopIfNetErr = !conf.Force // ignore network error
+		return module
 	/* --[DBs]-- */
 	case db.MysqlName:
 		return db.NewMysql(target, GetPortOrDefault(port, 3306), conf.Sleep, conf.Timeout)
