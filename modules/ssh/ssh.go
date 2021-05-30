@@ -2,12 +2,13 @@ package ssh
 
 import (
 	"fmt"
-	"github.com/c-f/hygo/model"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/c-f/hygo/model"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -23,8 +24,8 @@ type SSH struct {
 	Port int
 
 	// Options
-	StopIfSuccess bool
-	StopIfNetErr  bool
+	StopIfSuccess     bool
+	StopIfNetErr      bool
 	LogFailedAttempts bool
 
 	// timeout
@@ -43,11 +44,11 @@ func New(host string, port int, sleep time.Duration, timeout time.Duration, logA
 		Host: host,
 		Port: port,
 		// Time Stuff
-		timeout:       timeout,
-		sleep:         sleep,
-		StopIfSuccess: true, // default
-		StopIfNetErr:  true, // default
-		LogFailedAttempts: logAttempts, // default
+		timeout:           timeout,
+		sleep:             sleep,
+		StopIfSuccess:     true, // default
+		StopIfNetErr:      true, // default
+		LogFailedAttempts: logAttempts,
 
 		queue: make(chan model.Credential),
 	}
@@ -92,7 +93,7 @@ func (bruter *SSH) handle(outChan chan model.Result, errChan chan model.Err) {
 	addr := fmt.Sprintf("%s:%d", bruter.Host, bruter.Port)
 
 	for c := range bruter.queue {
-		if ! bruter.active.Get() { // possibility to get a recheck or counter
+		if !bruter.active.Get() { // possibility to get a recheck or counter
 			continue
 		}
 

@@ -2,12 +2,14 @@ package db
 
 import (
 	"fmt"
-	"github.com/c-f/hygo/model"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/c-f/hygo/model"
 
 	_ "github.com/lib/pq"
 )
@@ -19,8 +21,9 @@ type Postgres struct {
 	Port int
 
 	// Options
-	StopIfSuccess bool
-	StopIfNetErr  bool
+	StopIfSuccess     bool
+	StopIfNetErr      bool
+	LogFailedAttempts bool
 
 	// timeout
 	timeout time.Duration
@@ -33,14 +36,16 @@ type Postgres struct {
 }
 
 // NewPostgres creates a new Postgres Bruter
-func NewPostgres(host string, port int, sleep time.Duration, timeout time.Duration) *Postgres {
+func NewPostgres(host string, port int, sleep time.Duration, timeout time.Duration, logAttempts bool) *Postgres {
 	return &Postgres{
 		Host: host,
 		Port: port,
 		// Time Stuff
-		timeout:       timeout,
-		sleep:         sleep,
-		StopIfSuccess: true, // default
+		timeout:           timeout,
+		sleep:             sleep,
+		StopIfSuccess:     true, // default
+		StopIfNetErr:      true, // default
+		LogFailedAttempts: logAttempts,
 
 		queue: make(chan model.Credential),
 	}
@@ -81,16 +86,25 @@ func (bruter *Postgres) handle(outChan chan model.Result, errChan chan model.Err
 	addr := fmt.Sprintf("%s:%d", bruter.Host, bruter.Port)
 
 	for c := range bruter.queue {
+		if !bruter.active.Get() { // possibility to get a recheck or counter
+			continue
+		}
+
+		time.Sleep(bruter.sleep)
 		ok, err := ConnectPostgres(addr, c, bruter.timeout)
 		if err != nil {
 			errStr := err.Error()
 			shouldContinue := true
 
 			if strings.Contains(errStr, "password authentication failed for user") {
+				if bruter.LogFailedAttempts {
+					log.Println("Failed for", addr, string(c.ToJson()))
+				}
 				continue
 			}
 
 			if !shouldContinue {
+				log.Println("Disable Bruteforce (conn reset) for ", PostgresName, bruter.Host)
 				bruter.active.Set(false)
 			}
 			errChan <- model.Err{
@@ -113,7 +127,6 @@ func (bruter *Postgres) handle(outChan chan model.Result, errChan chan model.Err
 				Port:       strconv.Itoa(bruter.Port),
 			}
 		}
-		time.Sleep(bruter.sleep)
 	}
 }
 

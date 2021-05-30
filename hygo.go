@@ -18,15 +18,25 @@ func GetBruter(service string, conf *Config, target string, port string) Bruter 
 		return module
 	/* --[DBs]-- */
 	case db.MysqlName:
-		return db.NewMysql(target, GetPortOrDefault(port, 3306), conf.Sleep, conf.Timeout)
+		module := db.NewMysql(target, GetPortOrDefault(port, 3306), conf.Sleep, conf.Timeout, conf.LogFailedAttempts)
+		module.StopIfNetErr = !conf.Force // ignore network error
+		return module
 	case db.PostgresName:
-		return db.NewPostgres(target, GetPortOrDefault(port, 5432), conf.Sleep, conf.Timeout)
+		module := db.NewPostgres(target, GetPortOrDefault(port, 5432), conf.Sleep, conf.Timeout, conf.LogFailedAttempts)
+		module.StopIfNetErr = !conf.Force // ignore network error
+		return module
 	case db.MssqlName:
-		return db.NewMssql(target, GetPortOrDefault(port, 1443), conf.Sleep, conf.Timeout)
+		module := db.NewMssql(target, GetPortOrDefault(port, 1443), conf.Sleep, conf.Timeout, conf.LogFailedAttempts)
+		module.StopIfNetErr = !conf.Force // ignore network error
+		return module
 	case db.MongoDBName:
-		return db.NewMongoDB(target, GetPortOrDefault(port, 27017), conf.Sleep, conf.Timeout)
+		module := db.NewMongoDB(target, GetPortOrDefault(port, 27017), conf.Sleep, conf.Timeout, conf.LogFailedAttempts)
+		module.StopIfNetErr = !conf.Force // ignore network error
+		return module
 	case db.RedisName:
-		return db.NewRedis(target, GetPortOrDefault(port, 6379), conf.Sleep, conf.Timeout)
+		module := db.NewRedis(target, GetPortOrDefault(port, 6379), conf.Sleep, conf.Timeout, conf.LogFailedAttempts)
+		module.StopIfNetErr = !conf.Force // ignore network error
+		return module
 		// couchdb
 		// cassandra
 	}

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -27,8 +28,9 @@ type MongoDB struct {
 	Port int
 
 	// Options
-	StopIfSuccess bool
-	StopIfNetErr  bool
+	StopIfSuccess     bool
+	StopIfNetErr      bool
+	LogFailedAttempts bool
 
 	// timeout
 	timeout time.Duration
@@ -41,14 +43,16 @@ type MongoDB struct {
 }
 
 // NewMongoDB creates a new MongoDB Bruter
-func NewMongoDB(host string, port int, sleep time.Duration, timeout time.Duration) *MongoDB {
+func NewMongoDB(host string, port int, sleep time.Duration, timeout time.Duration, logAttempts bool) *MongoDB {
 	return &MongoDB{
 		Host: host,
 		Port: port,
 		// Time Stuff
-		timeout:       timeout,
-		sleep:         sleep,
-		StopIfSuccess: true, // default
+		timeout:           timeout,
+		sleep:             sleep,
+		StopIfSuccess:     true, // default
+		StopIfNetErr:      true, // default
+		LogFailedAttempts: logAttempts,
 
 		queue: make(chan model.Credential),
 	}
@@ -85,6 +89,11 @@ func (bruter *MongoDB) handle(outChan chan model.Result, errChan chan model.Err)
 	addr := fmt.Sprintf("%s:%d", bruter.Host, bruter.Port)
 
 	for c := range bruter.queue {
+		if !bruter.active.Get() { // possibility to get a recheck or counter
+			continue
+		}
+
+		time.Sleep(bruter.sleep)
 		ok, err := ConnectMongoDB(addr, c, bruter.timeout)
 		if err != nil {
 			errStr := err.Error()
@@ -92,6 +101,9 @@ func (bruter *MongoDB) handle(outChan chan model.Result, errChan chan model.Err)
 
 			// Error":"connection() error occured during connection handshake: auth error: sasl conversation error: unable to authenticate using mechanism \"SCRAM-SHA-1\": (AuthenticationFailed) Authentication failed.
 			if strings.Contains(errStr, "(AuthenticationFailed) Authentication failed") {
+				if bruter.LogFailedAttempts {
+					log.Println("Failed for", addr, string(c.ToJson()))
+				}
 				continue
 			}
 
@@ -101,6 +113,7 @@ func (bruter *MongoDB) handle(outChan chan model.Result, errChan chan model.Err)
 			}
 
 			if !shouldContinue {
+				log.Println("Disable Bruteforce (conn reset) for ", MongoDBName, bruter.Host)
 				bruter.active.Set(false)
 			}
 			errChan <- model.Err{
@@ -123,7 +136,6 @@ func (bruter *MongoDB) handle(outChan chan model.Result, errChan chan model.Err)
 				Port:       strconv.Itoa(bruter.Port),
 			}
 		}
-		time.Sleep(bruter.sleep)
 	}
 }
 
