@@ -2,12 +2,14 @@ package db
 
 import (
 	"fmt"
-	"github.com/c-f/hygo/model"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/c-f/hygo/model"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -23,8 +25,9 @@ type Mysql struct {
 	Port int
 
 	// Options
-	StopIfSuccess bool
-	StopIfNetErr  bool
+	StopIfSuccess     bool
+	StopIfNetErr      bool
+	LogFailedAttempts bool
 
 	// timeout
 	timeout time.Duration
@@ -37,14 +40,16 @@ type Mysql struct {
 }
 
 // NewMysql creates a new Mysql Bruter
-func NewMysql(host string, port int, sleep time.Duration, timeout time.Duration) *Mysql {
+func NewMysql(host string, port int, sleep time.Duration, timeout time.Duration, logAttempts bool) *Mysql {
 	return &Mysql{
 		Host: host,
 		Port: port,
 		// Time Stuff
-		timeout:       timeout,
-		sleep:         sleep,
-		StopIfSuccess: true, // default
+		timeout:           timeout,
+		sleep:             sleep,
+		StopIfSuccess:     true, // default
+		StopIfNetErr:      true, // default
+		LogFailedAttempts: logAttempts,
 
 		queue: make(chan model.Credential),
 	}
@@ -81,12 +86,20 @@ func (bruter *Mysql) handle(outChan chan model.Result, errChan chan model.Err) {
 	addr := fmt.Sprintf("%s:%d", bruter.Host, bruter.Port)
 
 	for c := range bruter.queue {
+		if !bruter.active.Get() { // possibility to get a recheck or counter
+			continue
+		}
+
+		time.Sleep(bruter.sleep)
 		ok, err := ConnectMysql(addr, c, bruter.timeout)
 		if err != nil {
 			errStr := err.Error()
 			shouldContinue := true
 
 			if strings.Contains(errStr, "Access denied for user") {
+				if bruter.LogFailedAttempts {
+					log.Println("Failed for", addr, string(c.ToJson()))
+				}
 				continue
 			}
 			// dial tcp 127.0.0.1:14105: connect: connection refused
@@ -95,6 +108,7 @@ func (bruter *Mysql) handle(outChan chan model.Result, errChan chan model.Err) {
 			}
 
 			if !shouldContinue {
+				log.Println("Disable Bruteforce (conn reset) for ", MysqlName, bruter.Host)
 				bruter.active.Set(false)
 			}
 			errChan <- model.Err{
@@ -117,7 +131,6 @@ func (bruter *Mysql) handle(outChan chan model.Result, errChan chan model.Err) {
 				Port:       strconv.Itoa(bruter.Port),
 			}
 		}
-		time.Sleep(bruter.sleep)
 	}
 }
 

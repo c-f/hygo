@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,8 +25,9 @@ type Redis struct {
 	Port int
 
 	// Options
-	StopIfSuccess bool
-	StopIfNetErr  bool
+	StopIfSuccess     bool
+	StopIfNetErr      bool
+	LogFailedAttempts bool
 
 	// timeout
 	timeout time.Duration
@@ -38,14 +40,16 @@ type Redis struct {
 }
 
 // NewRedis creates a new Redis Bruter
-func NewRedis(host string, port int, sleep time.Duration, timeout time.Duration) *Redis {
+func NewRedis(host string, port int, sleep time.Duration, timeout time.Duration, logAttempts bool) *Redis {
 	return &Redis{
 		Host: host,
 		Port: port,
 		// Time Stuff
-		timeout:       timeout,
-		sleep:         sleep,
-		StopIfSuccess: true, // default
+		timeout:           timeout,
+		sleep:             sleep,
+		StopIfSuccess:     true, // default
+		StopIfNetErr:      true, // default
+		LogFailedAttempts: logAttempts,
 
 		queue: make(chan model.Credential),
 	}
@@ -82,16 +86,27 @@ func (bruter *Redis) handle(outChan chan model.Result, errChan chan model.Err) {
 	addr := fmt.Sprintf("%s:%d", bruter.Host, bruter.Port)
 
 	for c := range bruter.queue {
+		if !bruter.active.Get() { // possibility to get a recheck or counter
+			continue
+		}
+
+		time.Sleep(bruter.sleep)
 		ok, err := ConnectRedis(addr, c, bruter.timeout)
 		if err != nil {
 			errStr := err.Error()
 			shouldContinue := true
 
 			if strings.Contains(errStr, "WRONGPASS invalid username-password pair") {
+				if bruter.LogFailedAttempts {
+					log.Println("Failed for", addr, string(c.ToJson()))
+				}
 				continue
 			}
 
 			if strings.Contains(errStr, "ERR invalid password") {
+				if bruter.LogFailedAttempts {
+					log.Println("Failed for", addr, string(c.ToJson()))
+				}
 				continue
 			}
 
@@ -100,6 +115,7 @@ func (bruter *Redis) handle(outChan chan model.Result, errChan chan model.Err) {
 			}
 
 			if !shouldContinue {
+				log.Println("Disable Bruteforce (conn reset) for ", RedisName, bruter.Host)
 				bruter.active.Set(false)
 			}
 			errChan <- model.Err{
@@ -122,7 +138,6 @@ func (bruter *Redis) handle(outChan chan model.Result, errChan chan model.Err) {
 				Port:       strconv.Itoa(bruter.Port),
 			}
 		}
-		time.Sleep(bruter.sleep)
 	}
 }
 

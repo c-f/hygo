@@ -2,12 +2,13 @@ package ssh
 
 import (
 	"fmt"
-	"github.com/c-f/hygo/model"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/c-f/hygo/model"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -23,8 +24,9 @@ type SSH struct {
 	Port int
 
 	// Options
-	StopIfSuccess bool
-	StopIfNetErr  bool
+	StopIfSuccess     bool
+	StopIfNetErr      bool
+	LogFailedAttempts bool
 
 	// timeout
 	timeout time.Duration
@@ -37,14 +39,16 @@ type SSH struct {
 }
 
 // New creates a new SSH Bruter
-func New(host string, port int, sleep time.Duration, timeout time.Duration) *SSH {
+func New(host string, port int, sleep time.Duration, timeout time.Duration, logAttempts bool) *SSH {
 	bruter := &SSH{
 		Host: host,
 		Port: port,
 		// Time Stuff
-		timeout:       timeout,
-		sleep:         sleep,
-		StopIfSuccess: true, // default
+		timeout:           timeout,
+		sleep:             sleep,
+		StopIfSuccess:     true, // default
+		StopIfNetErr:      true, // default
+		LogFailedAttempts: logAttempts,
 
 		queue: make(chan model.Credential),
 	}
@@ -89,7 +93,11 @@ func (bruter *SSH) handle(outChan chan model.Result, errChan chan model.Err) {
 	addr := fmt.Sprintf("%s:%d", bruter.Host, bruter.Port)
 
 	for c := range bruter.queue {
+		if !bruter.active.Get() { // possibility to get a recheck or counter
+			continue
+		}
 
+		time.Sleep(bruter.sleep)
 		ok, err := ConnectWithCredential(addr, c, bruter.timeout)
 		if err != nil {
 			// TODO(Chris): err handling should be better
@@ -102,6 +110,9 @@ func (bruter *SSH) handle(outChan chan model.Result, errChan chan model.Err) {
 			// If password is wrong
 			// ssh: unable to authenticate, attempted methods [none], no supported methods remain
 			if strings.Contains(errStr, "no supported methods remain") {
+				if bruter.LogFailedAttempts {
+					log.Println("Failed for", addr, string(c.ToJson()))
+				}
 				continue
 			}
 
@@ -110,6 +121,7 @@ func (bruter *SSH) handle(outChan chan model.Result, errChan chan model.Err) {
 				shouldContinue = false
 			}
 			if !shouldContinue {
+				log.Println("Disable Bruteforce (conn reset) for ", Name, bruter.Host)
 				bruter.active.Set(false)
 			}
 
@@ -136,7 +148,6 @@ func (bruter *SSH) handle(outChan chan model.Result, errChan chan model.Err) {
 				Port:       strconv.Itoa(bruter.Port),
 			}
 		}
-		time.Sleep(bruter.sleep)
 	}
 }
 

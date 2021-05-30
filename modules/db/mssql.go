@@ -2,12 +2,14 @@ package db
 
 import (
 	"fmt"
-	"github.com/c-f/hygo/model"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/c-f/hygo/model"
 
 	_ "github.com/denisenkom/go-mssqldb"
 )
@@ -23,8 +25,9 @@ type Mssql struct {
 	Port int
 
 	// Options
-	StopIfSuccess bool
-	StopIfNetErr  bool
+	StopIfSuccess     bool
+	StopIfNetErr      bool
+	LogFailedAttempts bool
 
 	// timeout
 	timeout time.Duration
@@ -37,14 +40,16 @@ type Mssql struct {
 }
 
 // NewMssql creates a new Mssql Bruter
-func NewMssql(host string, port int, sleep time.Duration, timeout time.Duration) *Mssql {
+func NewMssql(host string, port int, sleep time.Duration, timeout time.Duration, logAttempts bool) *Mssql {
 	return &Mssql{
 		Host: host,
 		Port: port,
 		// Time Stuff
-		timeout:       timeout,
-		sleep:         sleep,
-		StopIfSuccess: true, // default
+		timeout:           timeout,
+		sleep:             sleep,
+		StopIfSuccess:     true, // default
+		StopIfNetErr:      true, // default
+		LogFailedAttempts: logAttempts,
 
 		queue: make(chan model.Credential),
 	}
@@ -81,6 +86,11 @@ func (bruter *Mssql) handle(outChan chan model.Result, errChan chan model.Err) {
 	addr := fmt.Sprintf("%s:%d", bruter.Host, bruter.Port)
 
 	for c := range bruter.queue {
+		if !bruter.active.Get() { // possibility to get a recheck or counter
+			continue
+		}
+
+		time.Sleep(bruter.sleep)
 		ok, err := ConnectMssql(addr, c, bruter.timeout)
 		if err != nil {
 			errStr := err.Error()
@@ -88,6 +98,9 @@ func (bruter *Mssql) handle(outChan chan model.Result, errChan chan model.Err) {
 
 			// login error: mssql: Login failed for user 'sa'.
 			if strings.Contains(errStr, "login error: mssql: Login failed for user ") {
+				if bruter.LogFailedAttempts {
+					log.Println("Failed for", addr, string(c.ToJson()))
+				}
 				continue
 			}
 
@@ -97,6 +110,7 @@ func (bruter *Mssql) handle(outChan chan model.Result, errChan chan model.Err) {
 			}
 
 			if !shouldContinue {
+				log.Println("Disable Bruteforce (conn reset) for ", MssqlName, bruter.Host)
 				bruter.active.Set(false)
 			}
 			errChan <- model.Err{
@@ -119,7 +133,6 @@ func (bruter *Mssql) handle(outChan chan model.Result, errChan chan model.Err) {
 				Port:       strconv.Itoa(bruter.Port),
 			}
 		}
-		time.Sleep(bruter.sleep)
 	}
 }
 
